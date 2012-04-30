@@ -1,0 +1,7 @@
+//
+// Prefix header for all source files of the 'XBeeTest' target in the 'XBeeTest' project
+//
+
+#ifdef __OBJC__
+    #import <Cocoa/Cocoa.h>
+#endif
