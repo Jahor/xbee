@@ -7,8 +7,8 @@
 //
 
 #import "XBee.h"
-#include "../../lib/xbee.h"
-#include "../../lib/xbee_utils.h"
+#include "xbee.h"
+#include "xbee_utils.h"
 #import "XBee_Internal.h"
 
 static NSDictionary* atCommandsDescriptions = nil;

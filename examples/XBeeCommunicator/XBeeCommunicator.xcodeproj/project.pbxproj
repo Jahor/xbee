@@ -58,7 +58,6 @@
 		AD12A917155FD483004176EA /* AsyncUdpSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncUdpSocket.h; sourceTree = "<group>"; };
 		AD12A918155FD483004176EA /* AsyncUdpSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AsyncUdpSocket.m; sourceTree = "<group>"; };
 		AD17E4441530BE8D002A5ADC /* xbee.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xbee.c; path = ../../lib/xbee.c; sourceTree = "<group>"; };
-		AD17E4461530BE94002A5ADC /* xbee.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = xbee.h; path = ../../lib/xbee.h; sourceTree = "<group>"; };
 		AD17E44C1530F8A6002A5ADC /* XBeeTest.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = XBeeTest.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD17E44D1530F8A6002A5ADC /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
 		AD17E44F1530F8A6002A5ADC /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
@@ -67,6 +66,9 @@
 		AD17E4571530F8A6002A5ADC /* XBeeTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XBeeTest.h; sourceTree = "<group>"; };
 		AD17E4581530F8A6002A5ADC /* XBeeTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XBeeTest.m; sourceTree = "<group>"; };
 		AD17E45A1530F8A6002A5ADC /* XBeeTest-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "XBeeTest-Prefix.pch"; sourceTree = "<group>"; };
+		AD7F958C161231F400CAC929 /* xbee_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xbee_utils.h; path = ../../lib/include/xbee_utils.h; sourceTree = "<group>"; };
+		AD7F958D161231F400CAC929 /* xbee_zcl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xbee_zcl.h; path = ../../lib/include/xbee_zcl.h; sourceTree = "<group>"; };
+		AD7F958E161231F400CAC929 /* xbee.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xbee.h; path = ../../lib/include/xbee.h; sourceTree = "<group>"; };
 		ADEE6339154D243200DCDBFF /* USBSerialDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USBSerialDevice.h; sourceTree = "<group>"; };
 		ADEE633A154D243200DCDBFF /* USBSerialDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = USBSerialDevice.m; sourceTree = "<group>"; };
 		ADEE633B154D243200DCDBFF /* USBSerialDeviceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USBSerialDeviceManager.h; sourceTree = "<group>"; };
@@ -78,7 +80,6 @@
 		ADEE6341154D243200DCDBFF /* USBDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USBDevice.h; sourceTree = "<group>"; };
 		ADEE6342154D243200DCDBFF /* USBDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = USBDevice.m; sourceTree = "<group>"; };
 		ADEE634D154D2AC000DCDBFF /* xbee_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xbee_utils.c; path = ../../lib/xbee_utils.c; sourceTree = "<group>"; };
-		ADEE634E154D2AC100DCDBFF /* xbee_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xbee_utils.h; path = ../../lib/xbee_utils.h; sourceTree = "<group>"; };
 		ADEE6350154D572E00DCDBFF /* HexTransformer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HexTransformer.h; sourceTree = "<group>"; };
 		ADEE6351154D572F00DCDBFF /* HexTransformer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HexTransformer.m; sourceTree = "<group>"; };
 		ADEE6353154D5AE600DCDBFF /* HexTransformer16.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HexTransformer16.h; sourceTree = "<group>"; };
@@ -88,7 +89,6 @@
 		ADEE6359154D5B2E00DCDBFF /* HexTransformer32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HexTransformer32.h; sourceTree = "<group>"; };
 		ADEE635A154D5B2F00DCDBFF /* HexTransformer32.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HexTransformer32.m; sourceTree = "<group>"; };
 		ADEE6361154FC02000DCDBFF /* xbee_zcl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xbee_zcl.c; path = ../../lib/xbee_zcl.c; sourceTree = "<group>"; };
-		ADEE6362154FC02100DCDBFF /* xbee_zcl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xbee_zcl.h; path = ../../lib/xbee_zcl.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -250,12 +250,12 @@
 		ADEE6365154FC02800DCDBFF /* xbee */ = {
 			isa = PBXGroup;
 			children = (
+				AD7F958C161231F400CAC929 /* xbee_utils.h */,
+				AD7F958D161231F400CAC929 /* xbee_zcl.h */,
+				AD7F958E161231F400CAC929 /* xbee.h */,
 				ADEE6361154FC02000DCDBFF /* xbee_zcl.c */,
-				ADEE6362154FC02100DCDBFF /* xbee_zcl.h */,
 				AD17E4441530BE8D002A5ADC /* xbee.c */,
-				AD17E4461530BE94002A5ADC /* xbee.h */,
 				ADEE634D154D2AC000DCDBFF /* xbee_utils.c */,
-				ADEE634E154D2AC100DCDBFF /* xbee_utils.h */,
 			);
 			name = xbee;
 			sourceTree = "<group>";

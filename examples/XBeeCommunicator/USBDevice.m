@@ -25,7 +25,7 @@
 }
 
 -(NSString*) description {
-    return [NSString stringWithFormat:@"%@ (0x%04lx:0x%04lx) @ %lu", name, vendorId, productId, locationId];
+    return [NSString stringWithFormat:@"%@ (0x%04x:0x%04x) @ %u", name, vendorId, productId, locationId];
 }
 
 -(id) initFromIOService:(io_service_t) usbDevice {
