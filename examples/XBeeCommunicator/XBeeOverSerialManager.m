@@ -6,9 +6,10 @@
 //  Copyright 2010 iTransition. All rights reserved.
 //
 
-#import "XBeeManager.h"
+#import "XBeeOverSerialManager.h"
+#import "XBeeOverSerial.h"
 
-@interface XBeeManager()
+@interface XBeeOverSerialManager()
 
 -(void) setNewXBee:(XBee*) newXB;
 
@@ -16,7 +17,7 @@
 
 
 
-@implementation XBeeManager
+@implementation XBeeOverSerialManager
 @synthesize atCommands;
 @synthesize atValue;
 @synthesize xbs, xbDelegate;
@@ -80,7 +81,7 @@
 -(BOOL) usbSerialDeviceManager:(USBSerialDeviceManager*) manager
                 foundNewDevice:(USBSerialDevice*) device {
     if ([device.name isEqualToString: @"XBee Explorer"]) {
-        XBee* newXB = [[XBee alloc] initWithBaseDevice: device];
+        XBee* newXB = [[XBeeOverSerial alloc] initWithBaseDevice: device];
         
         [self tryConnect: [NSArray arrayWithObjects: newXB, [NSNumber numberWithInt: 10], nil]];
         
@@ -97,7 +98,7 @@
     }
 }
 
--(void) setNewXBee:(XBee*) newXB {
+-(void) setNewXBee:(XBeeOverSerial*) newXB {
     if (![NSThread isMainThread]) {
         [self performSelectorOnMainThread:_cmd withObject: newXB waitUntilDone: YES];
         return;
@@ -118,7 +119,7 @@
     }
     
     NSMutableArray* newXbs = [NSMutableArray arrayWithCapacity: [xbs count] - 1];
-    for (XBee* xb in xbs) {
+    for (XBeeOverSerial* xb in xbs) {
         if (xb.device == aDevice) {
             [xb disconnect];
             [xb release];

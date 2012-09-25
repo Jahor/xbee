@@ -23,7 +23,7 @@
 
 typedef uint16_t XBeeFrameLength;
 
-static size_t writeNormal(xbee* xb, void* data, size_t dataLength) {
+static size_t writeNormal(xbee* xb, const void* data, size_t dataLength) {
     int i;
     for (i = 0; i < dataLength; i++) {
         xb->checksum += ((uint8_t*)data)[i];
@@ -32,7 +32,7 @@ static size_t writeNormal(xbee* xb, void* data, size_t dataLength) {
     return dataLength;
 }
 
-static size_t writeEscaped(xbee* xb, void* data, size_t dataLength) {
+static size_t writeEscaped(xbee* xb, const void* data, size_t dataLength) {
     int i;
     for (i = 0; i < dataLength; i++) {
         uint8_t c = ((uint8_t*) data)[i];
@@ -126,9 +126,10 @@ static inline void writeChecksum(xbee* xb) {
     cs -= xb->checksum;
     write8(xb, cs);
     xb->checksum = 0x00;
+    xb->write(xb, NULL, 0);
 }
 
-size_t copyNormal(xbee* xb, void* data, size_t dataLength) {
+size_t copyNormal(xbee* xb, const void* data, size_t dataLength) {
     size_t toCopy = dataLength;
     size_t freeInBuffer = (XBEE_BUFFER_CAPACITY - xb->buffer.length);
     if (toCopy > freeInBuffer) {
@@ -139,7 +140,7 @@ size_t copyNormal(xbee* xb, void* data, size_t dataLength) {
     return toCopy;
 }
 
-size_t copyEscaped(xbee* xb, void* data, size_t dataLength) {
+size_t copyEscaped(xbee* xb, const void* data, size_t dataLength) {
     size_t toCopy = dataLength;
     size_t freeInBuffer = (XBEE_BUFFER_CAPACITY - xb->buffer.length);
     if (toCopy > freeInBuffer) {
@@ -166,7 +167,7 @@ size_t copyEscaped(xbee* xb, void* data, size_t dataLength) {
     return ri;
 }
 
-void XBeeAddData(xbee* xb, void* data, size_t dataLength) {
+void XBeeAddData(xbee* xb, const void* data, size_t dataLength) {
 #define MOVE(s) do { \
                     frame += (s);\
                     dataAvailable -= (s);\

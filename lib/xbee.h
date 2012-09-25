@@ -200,7 +200,7 @@ typedef enum __attribute__ ((__packed__)) {
 
 typedef struct xbee xbee;
 
-typedef size_t (*XBeeDataWrite)(xbee* xbee, void* buf, size_t length);
+typedef size_t (*XBeeDataWrite)(xbee* xbee, const void* buf, size_t length);
 
 
 typedef void (*XBeeOnATCommandResponse)(xbee* xbee, XBeeFrameId frameId, const char* atCommand, XBeeATCommandStatus status, void* data, size_t dataLength);
@@ -256,7 +256,7 @@ void XBeeInit(xbee* xbee, XBeeAPIMode apiMode, XBeeDataWrite write, void* userDa
 
 void* XBeeUserData(xbee* xbee);
 
-void XBeeAddData(xbee* xbee, void* data, size_t dataLength);
+void XBeeAddData(xbee* xbee, const void* data, size_t dataLength);
 
 XBeeFrameId XBeeSendATCommand(xbee* xbee, const char* atCommand, XBeeATParameter* parameter);
 XBeeFrameId XBeeSendATCommandQueueParameterValue(xbee* xbee, const char* atCommand, XBeeATParameter* parameter);

@@ -7,17 +7,15 @@
 //
 
 #import "XBee.h"
-#include <sys/ioctl.h>
 #include "../../lib/xbee.h"
 #include "../../lib/xbee_utils.h"
+#import "XBee_Internal.h"
 
-#define BUFFER_SIZE 1500
-
-#define BAUD_RATE B115200
+static NSDictionary* atCommandsDescriptions = nil;
 
 @interface XBee() 
 
--(size_t) writeBytes: (void*) data  length: (size_t) len;
+-(size_t) writeBytes: (const void*) data  length: (size_t) len;
 -(void) log:(NSString*) message;
 -(void) error:(NSString*) message;
 
@@ -26,12 +24,12 @@
 @end
 
 
-static size_t XBeeWrite(xbee* xbee, void* data, size_t dataLength) {
+static size_t XBeeWrite(xbee* xbee, const void* data, size_t dataLength) {
     XBee* x = XBeeUserData(xbee);
-    return [x writeBytes: data length: dataLength];;
+    return [x writeBytes: data length: dataLength];
 }
 
-static NSString* dumpString(void* data, size_t dataLength) {
+static NSString* dumpString(const void* data, size_t dataLength) {
     size_t buffer_length = dataLength * 3 + 1;
     char* buffer = malloc(buffer_length);
     hexDump(buffer, buffer_length, data, dataLength);
@@ -119,15 +117,131 @@ static void XBeeOnManyToOneRouteRequestIndicatorHandler(xbee* xbee, ZigBeeLongAd
 }
 
 @implementation XBee {
-    BOOL readThreadRunning;
     xbee xb;
+    
+    NSObject<XBeeDelegate>* delegate;
+    
+    NSOperationQueue* commandsQueue;
+    
+    NSMutableData* transmitBuffer;
+    
+    uint16_t networkAddress;
+    BOOL networkAddressRead;
+    uint16_t parentAddress;
+    BOOL parentAddressRead;
+    uint64_t serialNumber;
+    NSString* nodeIdentifier;
+    BOOL firmwareVersionRead;
+    uint16_t firmwareVersion;
+    BOOL hardwareVersionRead;
+    uint16_t hardwareVersion;
+    BOOL supplyVoltageRead;
+    uint16_t supplyVoltage;
+    
 }
-@synthesize delegate, device;
+@synthesize delegate;
 
++(void) initialize {
+    if (!atCommandsDescriptions) {
+        atCommandsDescriptions = [@{@"DH" : @"Destination Address High",
+        @"DL" : @"Destination Address Low",
+        @"MY" : @"16-bit Network Address",
+        @"MP" : @"16-bit Parent Network Address",
+        @"NC" : @"Number of Remaining Children",
+        @"SH" : @"Serial Number High",
+        @"SL" : @"Serial Number Low",
+        @"NI" : @"Node Identifier",
+        @"SE" : @"Source Endpoint",
+        @"DE" : @"Destination Endpoint",
+        @"CI" : @"Cluster Identifier",
+        @"NP" : @"Maximum RF Payload Bytes",
+        @"DD" : @"Device Type Identifier",
+        @"CH" : @"Operating Channel",
+        @"DA" : @"Force Disassociation",
+        @"ID" : @"Extended PAN ID",
+        @"OP" : @"Operating Extended PAN ID",
+        @"NH" : @"Maximum Unicast Hops",
+        @"BH" : @"Broadcast Hops",
+        @"OI" : @"Operating 16-bit PAN ID",
+        @"NT" : @"Node Discovery Timeout",
+        @"NO" : @"Network Discovery options",
+        @"SC" : @"Scan Channels",
+        @"SD" : @"Scan Duration",
+        @"ZS" : @"ZigBee Stack Profile",
+        @"NJ" : @"Node Join Time",
+        @"JV" : @"Channel Verification",
+        @"NW" : @"Network Watchdog Timeout",
+        @"JN" : @"Join Notification",
+        @"AR" : @"Aggregate Routing Notification",
+        @"DJ" : @"Disable Joining",
+        @"II" : @"Initial ID",
+        @"EE" : @"Encryption Enable",
+        @"EO" : @"Encryption Options",
+        @"NK" : @"Network Encryption Key",
+        @"KY" : @"Link Key",
+        @"PL" : @"Power Level",
+        @"PM" : @"Power Mode",
+        @"DB" : @"Received Signal Strength",
+        @"PP" : @"Peak Power",
+        @"AP" : @"API Enable",
+        @"AO" : @"API Options",
+        @"BD" : @"Interface Data Rate",
+        @"NB" : @"Serial Parity",
+        @"SB" : @"Stop Bits",
+        @"RO" : @"Packetization Timeout",
+        @"D7" : @"DIO7 Configuration",
+        @"D6" : @"DIO6 Configuration",
+        @"IR" : @"IO Sample Rate",
+        @"IC" : @"IO Digital Change Detection",
+        @"P0" : @"PWM0 Configuration",
+        @"P1" : @"DIO11 Configuration",
+        @"P2" : @"DIO12 Configuration",
+        @"P3" : @"DIO13 Configuration",
+        @"D0" : @"AD0/DIO0 Configuration",
+        @"D1" : @"AD1/DIO1 Configuration",
+        @"D2" : @"AD2/DIO2 Configuration",
+        @"D3" : @"AD3/DIO3 Configuration",
+        @"D4" : @"DIO4 Configuration",
+        @"D5" : @"DIO5 Configuration",
+        @"D8" : @"DIO8 Configuration",
+        @"LT" : @"Assoc LED Blink Time",
+        @"PR" : @"Pull-up Resistor",
+        @"RP" : @"RSSI PWM Timer",
+        @"%V" : @"Supply Voltage",
+        @"V+" : @"Voltage Supply Monitoring",
+        @"TP" : @"Reads the module temperature in Degrees Celsius",
+        @"VR" : @"Firmware Version",
+        @"HV" : @"Hardware Version",
+        @"AI" : @"Association Indication",
+        @"CT" : @"Command Mode Timeout",
+        @"CN" : @"Exit Command Mode",
+        @"GT" : @"Guard Times",
+        @"CC" : @"Command Sequence Character",
+        @"SM" : @"Sleep Mode Sets the sleep mode on the RF module",
+        @"SN" : @"Number of Sleep Periods",
+        @"SP" : @"Sleep Period",
+        @"ST" : @"Time Before Sleep Sets the time before sleep timer on an end device.",
+        @"SO" : @"Sleep Options",
+        @"WH" : @"Wake Host",
+        @"SI" : @"Sleep Immediately",
+        @"PO" : @"Polling Rate",
+        @"AC" : @"Apply Changes",
+        @"WR" : @"Write",
+        @"RE" : @"Restore Defaults",
+        @"FR" : @"Software Reset",
+        @"NR" : @"Network Reset",
+        @"SI" : @"Sleep Immediately",
+        @"CB" : @"Commissioning Pushbutton",
+        @"ND" : @"Node Discover",
+        @"DN" : @"Destination Node",
+        @"IS" : @"Force Sample Forces a read of all enabled digital and analog input lines.",
+        @"1S" : @"XBee Sensor Sample"} retain];
+    }
+}
 
 #pragma mark General functionality
 -(NSString*) name {
-    return self.device.name;
+    return @"XBee";
 }
 
 -(void) error:(NSString*) message {
@@ -146,102 +260,8 @@ static void XBeeOnManyToOneRouteRequestIndicatorHandler(xbee* xbee, ZigBeeLongAd
     }
 }
 
--(BOOL) connected {
-    return serialFileDescriptor != -1;
-}
-
 -(BOOL) connect {
-    NSString* serialPortFile = [device portName];
-    //[lineBuffer release];
-    //lineBuffer = [[NSMutableString alloc] init];
-    int success;
-    speed_t baudRate = BAUD_RATE;
-    // close the port if it is already open
-	if (serialFileDescriptor != -1) {
-		close(serialFileDescriptor);
-		serialFileDescriptor = -1;
-		// wait for the reading thread to die
-		while(readThreadRunning);
-		// re-opening the same port REALLY fast will fail spectacularly... better to sleep a sec
-		sleep(0.5);
-	}
-	
-	// c-string path to serial-port file
-	const char *bsdPath = [serialPortFile cStringUsingEncoding:NSUTF8StringEncoding];
-	
-	// Hold the original termios attributes we are setting
-	struct termios options;
-	
-	// receive latency ( in microseconds )
-	unsigned long mics = 3;
-	
-	// error message string
-	NSString *errorMessage = nil;
-	// open the port
-	//     O_NONBLOCK causes the port to open without any delay (we'll block with another call)
-	serialFileDescriptor = open(bsdPath, O_RDWR | O_NOCTTY | O_NONBLOCK );
-	
-	if (serialFileDescriptor == -1) { 
-		// check if the port opened correctly
-		errorMessage = [NSString stringWithFormat: NSLocalizedString(@"Couldn't open serial port %@", @"Error if we could not open serial port."), serialPortFile];
-	} else {
-		// TIOCEXCL causes blocking of non-root processes on this serial-port
-		success = ioctl(serialFileDescriptor, TIOCEXCL);
-		if ( success == -1) { 
-			errorMessage = NSLocalizedString(@"Couldn't obtain lock on serial port", @"Error if we could not obtain lock serial port.");
-		} else {
-			success = fcntl(serialFileDescriptor, F_SETFL, 0);
-			if ( success == -1) { 
-				// clear the O_NONBLOCK flag; all calls from here on out are blocking for non-root processes
-				errorMessage = NSLocalizedString(@"Couldn't obtain lock on serial port", @"Error if we could not obtain lock serial port.");
-			} else {
-				// Get the current options and save them so we can restore the default settings later.
-				success = tcgetattr(serialFileDescriptor, &gOriginalTTYAttrs);
-				if ( success == -1) { 
-					errorMessage = NSLocalizedString(@"Couldn't get serial attributes", @"Error if we could not get current serial port parameters.");
-				} else {
-					// copy the old termios settings into the current
-					//   you want to do this so that you get all the control characters assigned
-					options = gOriginalTTYAttrs;
-					
-					/*
-					 cfmakeraw(&options) is equivilent to:
-					 options->c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
-					 options->c_oflag &= ~OPOST;
-					 options->c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
-					 options->c_cflag &= ~(CSIZE | PARENB);
-					 options->c_cflag |= CS8;
-					 */
-					cfmakeraw(&options);
-                    options.c_cflag |= CCTS_OFLOW;
-					
-					// set tty attributes (raw-mode in this case)
-					success = tcsetattr(serialFileDescriptor, TCSANOW, &options);
-					if ( success == -1) {
-						errorMessage = NSLocalizedString(@"Coudln't set serial attributes", @"Error if we could not set custom serial port parameters.");
-					} else {
-						// Set baud rate (any arbitrary baud rate can be set this way)
-						success = ioctl(serialFileDescriptor, IOSSIOSPEED, &baudRate);
-						if ( success == -1) { 
-							errorMessage = [NSString stringWithFormat: @"Baud rate set error: %s (%i)", strerror(errno), errno];  //NSLocalizedString(@"Baud Rate out of bounds", @"Error if selected Baud rate could not be used.");
-						} else { 
-							// Set the receive latency (a.k.a. don't wait to buffer data)
-							success = ioctl(serialFileDescriptor, IOSSDATALAT, &mics);
-							if ( success == -1) { 
-								errorMessage = NSLocalizedString(@"Coudln't set serial latency", @"Error if we could not configure serial port not to wait for buffer data.");
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	// make sure the port is closed if a problem happens
-	if ((serialFileDescriptor != -1) && (errorMessage != nil)) {
-        close(serialFileDescriptor);
-        serialFileDescriptor = -1;
-	}
+    NSString* errorMessage = [self internalConnect];
 	
     if (errorMessage) {
         NSLog(@"Error: %@", errorMessage);
@@ -263,63 +283,20 @@ static void XBeeOnManyToOneRouteRequestIndicatorHandler(xbee* xbee, ZigBeeLongAd
     XBeeRegisterOnOverTheAirFirmwareUpdateStatus(&xb, XBeeOnOverTheAirFirmwareUpdateStatusHandler);
     XBeeRegisterOnRouteRecordIndicator(&xb, XBeeOnRouteRecordIndicatorHandler);
     XBeeRegisterOnManyToOneRouteRequestIndicator(&xb, XBeeOnManyToOneRouteRequestIndicatorHandler);
-	
-
-    [self performSelectorInBackground:@selector(incomingTextUpdateThread:) withObject:[NSThread currentThread]];
     
 	[delegate xbee:self info: @"Connected"];
     return YES;
 }
 
--(size_t) writeBytes: (void*) data length: (size_t) len {
-	if (serialFileDescriptor > 0) {
-        NSLog(@"Write: %@", dumpString(data, len));
-		return write(serialFileDescriptor, data, len);
-	}
-	return 0;	
-}
-
-// This selector/function will be called as another thread...
-//  this thread will read from the serial port and exits when the port is closed
-- (void)incomingTextUpdateThread: (NSThread *) parentThread {
-	
-
-	
-	// mark that the thread is running
-	readThreadRunning = TRUE;
-	
-	char byte_buffer[BUFFER_SIZE]; // buffer for holding incoming data
-	int numBytes=0; // number of bytes read during read
-	
-	// assign a high priority to this thread
-	[NSThread setThreadPriority:1.0];
-	
-	// this will loop unitl the serial port closes
-	while(TRUE) {
-        // create a pool so we can use regular Cocoa stuff
-        //   child threads can't re-use the parent's autorelease pool
-        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-		// read() blocks until some data is available or the port is closed
-		numBytes = read(serialFileDescriptor, byte_buffer, BUFFER_SIZE); // read up to the size of the buffer
-		if(numBytes>0) {
-            NSLog(@"Received data: \n %@\n", dumpString(byte_buffer,  numBytes));
-            XBeeAddData(&xb, byte_buffer, numBytes);
-		} else {
-			break; // Stop the thread if there is an error
-		}
-        [pool release];
-	}
-	
-	// make sure the serial port is closed
-	if (serialFileDescriptor != -1) {
-		close(serialFileDescriptor);
-		serialFileDescriptor = -1;
-	}
-	
-	// mark that the thread has quit
-	readThreadRunning = FALSE;
-	// give back the pool
-	
+-(size_t) writeBytes: (const void*) data length: (size_t) len {
+    if (data && len) {
+        [transmitBuffer appendBytes: data length: len];
+    } else {
+        NSLog(@"Write: %@", dumpString([transmitBuffer bytes], [transmitBuffer length]));
+        [self write: transmitBuffer];
+        [transmitBuffer setLength: 0];
+    }
+	return len;	
 }
 
 -(void) dealloc {
@@ -328,53 +305,43 @@ static void XBeeOnManyToOneRouteRequestIndicatorHandler(xbee* xbee, ZigBeeLongAd
     
 	[commandsQueue release];
 	commandsQueue = nil;
+    
+    [transmitBuffer release];
+    transmitBuffer = nil;
 	
-	[device release];
-	device = nil;
+    [nodeIdentifier release];
+    nodeIdentifier = nil;
     
     [super dealloc];
 }
 
--(id) initWithBaseDevice:(USBSerialDevice*) aDevice {
+-(id) init {
     if(self = [super init]) {
-        
         commandsQueue = [[NSOperationQueue alloc] init];
         [commandsQueue setMaxConcurrentOperationCount: 1];
         
-        serialFileDescriptor = -1;
-        device = [aDevice retain];
-        device.delegate = self;
-        readThreadRunning = NO;
+        transmitBuffer = [[NSMutableData alloc] init];
 	}
     return self;
 }
 
--(void) usbDeviceTerminated:(USBDevice*) aDevice {
-    [self disconnect];
-	device = nil;
-}
-
 -(BOOL) disconnect {
     [delegate xbee:self info: @"Disconnected"];
-    // close serial port if open
-    //portName = nil;
-	if (serialFileDescriptor != -1) {
-		close(serialFileDescriptor);
-		serialFileDescriptor = -1;
-       return YES;
-	}
-    return NO;
+    return [self internalDisconnect];	
 }
 
+-(void) addData:(NSData *)receivedData {
+    NSLog(@"Received data: \n %@\n", dumpString([receivedData bytes], [receivedData length]));
+    XBeeAddData(&xb, [receivedData bytes], [receivedData length]);
+}
 
 #pragma mark XBee Properties
 
--(uint64_t) address {
-    if (!addressRead) {
-        XBeeSendATCommand(&xb, "DH", NULL);
-        XBeeSendATCommand(&xb, "DL", NULL);
+-(NSString*) nodeIdentifier {
+    if (!nodeIdentifier) {
+        XBeeSendATCommand(&xb, "NI", NULL);
     }
-    return address;
+    return nodeIdentifier;
 }
 
 -(uint64_t) serialNumber {
@@ -405,6 +372,27 @@ static void XBeeOnManyToOneRouteRequestIndicatorHandler(xbee* xbee, ZigBeeLongAd
     XBeeSendZigBeeTransmitRequest(&xb, addr, ZigBeeShortAddressUnknown, 0, XBeeTransmitOptionsNone, (void*) [data bytes], [data length]);
 }
 
+-(uint16_t) firmwareVersion {
+    if (!firmwareVersionRead) {
+        XBeeSendATCommand(&xb, "VR", NULL);
+    }
+    return firmwareVersion;
+}
+
+-(uint16_t) hardwareVersion {
+    if (!hardwareVersionRead) {
+        XBeeSendATCommand(&xb, "HV", NULL);
+    }
+    return hardwareVersion;
+}
+
+-(uint16_t) supplyVoltage {
+    if (!supplyVoltageRead) {
+        XBeeSendATCommand(&xb, "%V", NULL);
+    }
+    return supplyVoltage;
+}
+
 /*
 @property(assign, nonatomic) uint64_t address;
 @property(readonly, nonatomic) uint16_t networkAddress;
@@ -413,23 +401,13 @@ static void XBeeOnManyToOneRouteRequestIndicatorHandler(xbee* xbee, ZigBeeLongAd
 @property(copy, nonatomic) NSString* nodeIdentifier;*/
 
 -(void) processATCommand: (const char*) command responseOn: (XBeeFrameId) frameId status: (XBeeATCommandStatus) status data: (void*) data length:(size_t) dataLength {
-    [self log: [NSString stringWithFormat: @"[%03d] AT Command %s: %s. Data: \n%@\n", frameId, command, XBeeATCommandStatusString(status), dumpString(data, dataLength)]];
+    [self log: [NSString stringWithFormat: @"[%03d] AT Command %s (%@): %s. Data: \n%@\n", frameId, command, atCommandsDescriptions[[NSString stringWithFormat:@"%s", command]], XBeeATCommandStatusString(status), dumpString(data, dataLength)]];
     if (status == XBeeATCommandOk) {
-        if (strcmp(command, "DH") == 0) {
-            if (data && dataLength == sizeof(uint32_t)) {
-                uint64_t value = ntohl(*((uint32_t*)data));
-                [self willChangeValueForKey:@"address"];
-                address = (address & 0xFFFFFFFF) | (value << 32);
-                addressRead = YES;
-                [self didChangeValueForKey:@"address"];
-            }
-        } else if (strcmp(command, "DL") == 0) {
-            if (data && dataLength == sizeof(uint32_t)) {
-                uint64_t value = ntohl(*((uint32_t*)data));
-                [self willChangeValueForKey:@"address"];
-                address = (address & 0xFFFFFFFF00000000) | value;
-                addressRead = YES;
-                [self didChangeValueForKey:@"address"];
+        if (strcmp(command, "NI") == 0) {
+            if (data && dataLength > 0) {
+                [self willChangeValueForKey:@"nodeIdentifier"];
+                nodeIdentifier = [[NSString alloc] initWithBytes: data length: dataLength encoding: NSUTF8StringEncoding];
+                [self didChangeValueForKey:@"nodeIdentifier"];
             }
         } else if (strcmp(command, "SH") == 0) {
             if (data && dataLength == sizeof(uint32_t)) {
@@ -460,6 +438,30 @@ static void XBeeOnManyToOneRouteRequestIndicatorHandler(xbee* xbee, ZigBeeLongAd
                 parentAddress = value;
                 parentAddressRead = YES;
                 [self didChangeValueForKey:@"parentAddress"];
+            }
+        } else if (strcmp(command, "VR") == 0) {
+            if (data && dataLength == sizeof(uint16_t)) {
+                uint64_t value = ntohs(*((uint16_t*)data));
+                [self willChangeValueForKey:@"firmwareVersion"];
+                firmwareVersion = value;
+                firmwareVersionRead = YES;
+                [self didChangeValueForKey:@"firmwareVersion"];
+            }
+        } else if (strcmp(command, "HV") == 0) {
+            if (data && dataLength == sizeof(uint16_t)) {
+                uint64_t value = ntohs(*((uint16_t*)data));
+                [self willChangeValueForKey:@"hardwareVersion"];
+                hardwareVersion = value;
+                hardwareVersionRead = YES;
+                [self didChangeValueForKey:@"hardwareVersion"];
+            }
+        } else if (strcmp(command, "%V") == 0) {
+            if (data && dataLength == sizeof(uint16_t)) {
+                uint64_t value = ntohs(*((uint16_t*)data)) * 1200 / 1024;
+                [self willChangeValueForKey:@"supplyVoltage"];
+                supplyVoltage = value;
+                supplyVoltageRead = YES;
+                [self didChangeValueForKey:@"supplyVoltage"];
             }
         }
     }

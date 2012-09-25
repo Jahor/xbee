@@ -13,17 +13,18 @@
 #include <IOKit/IOBSD.h>
 #include <IOKit/serial/ioss.h>
 #include <sys/ioctl.h>
-#import "XBeeManager.h"
+#import "XBeeOverSerialManager.h"
 
 @interface SerialExample : NSObject {
 	IBOutlet NSTextView *serialOutputArea;
 	IBOutlet NSTextField *baudInputField;
-	IBOutlet XBeeManager *xbManager;
+	IBOutlet XBeeOverSerialManager *xbManager;
 }
 @property (assign) IBOutlet NSColorWell *color;
 @property (assign) IBOutlet NSSlider *ledsCount;
 @property(retain, nonatomic) IBOutlet NSIndexSet* selectedXBees;
 @property(readonly, nonatomic) IBOutlet XBee* xb;
+@property(readonly, nonatomic) IBOutlet XBee* remoteXb;
 - (IBAction) ledsCountChanged:(id)sender;
 - (IBAction) colorChanged:(id)sender;
 - (IBAction) serialPortSelected: (id) cntrl;

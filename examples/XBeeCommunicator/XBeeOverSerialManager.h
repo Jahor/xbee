@@ -10,7 +10,7 @@
 #import "USBSerialDeviceManager.h"
 #import "XBee.h"
 
-@interface XBeeManager : NSObject<USBSerialDeviceManagerDelegate> {
+@interface XBeeOverSerialManager : NSObject<USBSerialDeviceManagerDelegate> {
     NSArray* xbs;
     io_iterator_t newMatchingServiceNotification;
     NSArray* serialManagers;

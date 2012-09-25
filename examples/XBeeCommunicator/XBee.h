@@ -7,44 +7,24 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#include <IOKit/serial/ioss.h>
-#import "USBSerialDevice.h"
 
 @protocol XBeeDelegate;
 
-@interface XBee : NSObject<USBDeviceDelegate> {
-    NSObject<XBeeDelegate>* delegate;
-    USBSerialDevice* device;
-    int serialFileDescriptor; // file handle to the serial port
-    struct termios gOriginalTTYAttrs; // Hold the original termios attributes so we can reset them on quit ( best practice )
-    NSOperationQueue* commandsQueue;
-    
-    uint64_t address;
-    BOOL addressRead;
-    uint16_t networkAddress;
-    BOOL networkAddressRead;
-    uint16_t parentAddress;
-    BOOL parentAddressRead;
-    uint64_t serialNumber;
-    NSString* nodeIdentifier;
-}
+@interface XBee : NSObject
 
--(id) initWithBaseDevice:(USBSerialDevice*) device;
-
-@property(readonly) USBSerialDevice* device;
 @property(readonly, nonatomic) NSString* name;
 @property(assign, nonatomic) NSObject<XBeeDelegate>* delegate;
 
 -(BOOL) connect;
 -(BOOL) disconnect;
 
-
-@property(assign, nonatomic) uint64_t address;
 @property(readonly, nonatomic) uint16_t networkAddress;
 @property(readonly, nonatomic) uint16_t parentAddress;
 @property(readonly, nonatomic) uint64_t serialNumber;
-@property(copy, nonatomic) NSString* nodeIdentifier;
-
+@property(readonly, nonatomic) NSString* nodeIdentifier;
+@property(readonly, nonatomic) uint16_t firmwareVersion;
+@property(readonly, nonatomic) uint16_t hardwareVersion;
+@property(readonly, nonatomic) uint16_t supplyVoltage;
 
 -(void) sendPacket:(NSData*) data to:(uint64_t) address;
 

@@ -24,7 +24,7 @@ char* ZigBeeDeviceTypeString(ZigBeeDeviceType deviceType);
 
 char* XBeeSourceEventString(XBeeSourceEvent sourceEvent);
 
-size_t hexDump(char* buffer, size_t buffer_length, void* data, size_t dataLength);
+size_t hexDump(char* buffer, size_t buffer_length, const void* data, size_t dataLength);
 
 char* XBeeReceiveOptionString(XBeeReceiveOptions options, int i);
 

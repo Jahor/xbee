@@ -7,6 +7,7 @@
 
 #import "SerialExample.h"
 #import "XBee.h"
+#import "XBeeOverUdp.h"
 
 @interface SerialExample()<XBeeDelegate>
 @end
@@ -17,7 +18,7 @@
 }
 @synthesize color;
 @synthesize ledsCount;
-@synthesize selectedXBees, xb;
+@synthesize selectedXBees, xb, remoteXb;
 
 
 -(void) setSelectedXBees:(NSIndexSet *)newSelectedXBees {
@@ -38,7 +39,15 @@
 
 // executes after everything in the xib/nib is initiallized
 - (void)awakeFromNib {
-	
+//    [self performSelector:@selector(initRemoteXb) withObject: nil afterDelay: 2.0];
+}
+
+-(void) initRemoteXb {
+    [self willChangeValueForKey:@"remoteXb"];
+	remoteXb = [[XBeeOverUdp alloc] initWithAddress:@"192.168.1.177" port: 8888];
+    remoteXb.delegate = self;
+    [remoteXb connect];
+    [self didChangeValueForKey:@"remoteXb"];
 }
 
 - (IBAction)ledsCountChanged:(id) sender {
@@ -49,7 +58,7 @@
 //    b *= a;
     
     uint8_t data[] = {1, [ledsCount intValue], 127 * r, 127 * g, 127 * b};
-    [xb sendPacket:[NSData dataWithBytes: data length:sizeof(data)] to: 0x0013A200402D7E5DLL];
+    [xb sendPacket:[NSData dataWithBytes: data length:sizeof(data)] to: 0x0013A200402D7D6ALL];
 }
 
 - (IBAction)colorChanged:(id)sender {
